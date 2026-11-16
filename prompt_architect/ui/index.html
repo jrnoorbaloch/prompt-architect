@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Architect — Professional Prompt Engineer</title>
+<style>
+  :root{--bg:#0b0d12;--panel:#12151d;--panel2:#181c26;--line:#262b38;--text:#e7e9ee;--muted:#8a91a3;
+        --acc:#d97757;--acc2:#f0a07f;--good:#4cc38a;--mid:#e6b450;--bad:#e5534b;--r:14px}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  header{display:flex;align-items:center;gap:12px;padding:18px 28px;border-bottom:1px solid var(--line)}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--acc),#a8462b);display:grid;place-items:center;font-weight:800}
+  header h1{font-size:18px;margin:0} header span{color:var(--muted);font-size:13px}
+  header button{margin-left:auto}
+  main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;padding:22px 28px;max-width:1500px;margin:auto}
+  @media(max-width:900px){main{grid-template-columns:1fr;padding:16px}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+  textarea,input,select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;outline:none}
+  textarea:focus,input:focus,select:focus{border-color:var(--acc)}
+  textarea#prompt{min-height:190px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  .primary{background:linear-gradient(135deg,var(--acc),#b9532f);border:0;font-weight:650;padding:13px;width:100%;margin-top:16px;font-size:16px}
+  .primary:disabled{opacity:.6;cursor:wait}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{font-size:12.5px;padding:6px 10px;border-radius:99px}
+  .scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .big{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+  .ring{font-size:30px;font-weight:800}
+  .arrow{color:var(--muted);font-size:22px}
+  .bar{height:6px;background:var(--panel2);border-radius:9px;overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%}
+  .s{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+  h3{margin:20px 0 8px;font-size:14px;color:var(--acc2)}
+  ul{margin:0;padding-left:18px} li{margin:3px 0}
+  pre{white-space:pre-wrap;word-wrap:break-word;background:#0a0c10;border:1px solid var(--line);border-radius:12px;padding:16px;margin:0;font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:560px;overflow:auto}
+  .tools{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px}
+  .empty{color:var(--muted);text-align:center;padding:70px 20px}
+  .err{background:#2a1416;border:1px solid #5c2328;color:#ffb4ae;padding:12px;border-radius:10px;margin-top:12px;display:none;white-space:pre-wrap}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:8px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  details{margin-top:14px} summary{cursor:pointer;color:var(--muted);font-size:13px}
+  .hist{max-height:220px;overflow:auto;margin-top:8px}
+  .hist div{padding:8px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hist div:hover{color:var(--text)}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:var(--r);width:min(520px,92vw);padding:22px}
+  dialog::backdrop{background:#000a}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">PA</div>
+  <div><h1>Prompt Architect</h1><span>Basic prompt → Professional prompt · any LLM</span></div>
+  <button id="openSettings">⚙ Settings</button>
+</header>
+
+<main>
+  <section class="card">
+    <label for="prompt">Your basic prompt</label>
+    <textarea id="prompt" placeholder="e.g.  write a blog about AI for my website"></textarea>
+    <div class="chips" id="examples"></div>
+
+    <div class="row">
+      <div><label>Mode</label>
+        <select id="mode">
+          <option value="standard">Standard (full)</option>
+          <option value="concise">Concise</option>
+          <option value="system">System prompt (chatbot/agent)</option>
+          <option value="chain">Prompt chain</option>
+        </select></div>
+      <div><label>Final prompt is for</label>
+        <select id="target">
+          <option>any LLM</option><option>Claude</option><option>ChatGPT / GPT</option>
+          <option>Gemini</option><option>Llama / open-source</option><option>Midjourney / image model</option>
+        </select></div>
+    </div>
+    <div class="row">
+      <div><label>Prompt language</label>
+        <select id="lang"><option>English</option><option>Urdu</option><option>Roman Urdu</option><option>Hindi</option><option>Arabic</option><option>Spanish</option></select></div>
+      <div><label>Using</label><input id="usingLbl" disabled></div>
+    </div>
+    <details><summary>+ Extra context (optional)</summary>
+      <textarea id="extra" style="margin-top:8px;min-height:80px" placeholder="Audience, brand voice, word limit, anything else..."></textarea>
+    </details>
+
+    <button class="primary" id="go">✨ Engineer my prompt</button>
+    <div class="err" id="err"></div>
+
+    <details><summary>History</summary><div class="hist" id="hist"></div></details>
+  </section>
+
+  <section class="card" id="out">
+    <div class="empty">Your professional prompt will appear here.<br><br>
+      <small>Tip: <b>Ctrl + Enter</b> to run · set your API key in ⚙ Settings</small></div>
+  </section>
+</main>
+
+<dialog id="settings">
+  <h2 style="margin-top:0">Settings</h2>
+  <label>Provider</label>
+  <select id="provider">
+    <option value="anthropic">Anthropic — Claude</option>
+    <option value="openai">OpenAI — GPT</option>
+    <option value="gemini">Google — Gemini</option>
+    <option value="openrouter">OpenRouter (any model)</option>
+    <option value="ollama">Ollama (local, free)</option>
+    <option value="custom">Custom OpenAI-compatible</option>
+  </select>
+  <div style="margin-top:12px"><label>Model</label><input id="model" placeholder="default"></div>
+  <div style="margin-top:12px"><label>API key</label><input id="key" type="password" placeholder="leave empty to use server env variable">
+    <div class="hint">Saved only in this browser. Sent only to your local server → provider.</div></div>
+  <div style="margin-top:12px" id="baseWrap"><label>Base URL</label><input id="base" placeholder="https://.../v1"></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+    <button id="closeSettings" class="primary" style="width:auto;margin:0;padding:10px 22px">Save</button>
+  </div>
+</dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+let DEFAULTS = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('pa_'+k); return v===null? d : JSON.parse(v);}catch{ return d } },
+  set(k, v){ try{ localStorage.setItem('pa_'+k, JSON.stringify(v)) }catch{} }
+};
+const EXAMPLES = ["write a blog about AI","make a customer support chatbot for my shoe shop",
+  "explain python decorators","write cold email to get clients","summarize this report"];
+EXAMPLES.forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('prompt').value=t;$('prompt').focus()};$('examples').appendChild(b)});
+
+function loadSettings(){
+  $('provider').value = store.get('provider','anthropic');
+  $('model').value = store.get('model_'+$('provider').value,'');
+  $('key').value = store.get('key_'+$('provider').value,'');
+  $('base').value = store.get('base_'+$('provider').value,'');
+  ['mode','target','lang'].forEach(k=>{ const v=store.get(k); if(v) $(k).value=v; });
+  refreshUI();
+}
+function refreshUI(){
+  const p=$('provider').value;
+  $('model').placeholder = DEFAULTS[p] ? 'default: '+DEFAULTS[p] : 'model name';
+  $('baseWrap').style.display = (p==='custom'||p==='ollama') ? '' : 'none';
+  $('usingLbl').value = $('provider').selectedOptions[0].text.split('—')[0].trim()+' · '+($('model').value||DEFAULTS[p]||'?');
+}
+$('provider').onchange=()=>{ const p=$('provider').value;
+  $('model').value=store.get('model_'+p,''); $('key').value=store.get('key_'+p,''); $('base').value=store.get('base_'+p,''); refreshUI(); };
+$('openSettings').onclick=()=>$('settings').showModal();
+$('closeSettings').onclick=()=>{ const p=$('provider').value;
+  store.set('provider',p); store.set('model_'+p,$('model').value); store.set('key_'+p,$('key').value); store.set('base_'+p,$('base').value);
+  refreshUI(); $('settings').close(); };
+['mode','target','lang'].forEach(k=>$(k).onchange=()=>store.set(k,$(k).value));
+
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col = n => n>=8?'var(--good)':n>=5?'var(--mid)':'var(--bad)';
+
+function render(r){
+  const sc = Object.entries(r.scores||{}).map(([k,v])=>`
+    <div class="s">${esc(k.replace('_',' '))} <b style="float:right">${v}/10</b>
+    <div class="bar"><i style="width:${v*10}%;background:${col(v)}"></i></div></div>`).join('');
+  const list = a => (a&&a.length)? '<ul>'+a.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>' : '<span style="color:var(--muted)">—</span>';
+  $('out').innerHTML = `
+    ${r.overall_score? `<div class="big"><div class="ring" style="color:${col(r.overall_score)}">${r.overall_score}/10</div>
+      <div class="arrow">→</div><div class="ring" style="color:${col(r.improved_score||9)}">${r.improved_score||'—'}/10</div>
+      <div style="color:var(--muted);font-size:13px">original → professional</div></div>
+      <div class="scores">${sc}</div>`:''}
+    <h3>✨ Professional prompt</h3>
+    <div class="tools"><button id="copy">📋 Copy</button><button id="dl">⬇ .md</button><button id="again">↻ Refine further</button></div>
+    <pre id="final">${esc(r.improved_prompt)}</pre>
+    <h3>🔍 Key issues in original</h3>${list(r.issues)}
+    <h3>🛠 What changed</h3>${list(r.changes)}
+    <h3>💭 Assumptions</h3>${list(r.assumptions)}`;
+  $('copy').onclick=()=>{navigator.clipboard.writeText(r.improved_prompt);$('copy').textContent='✓ Copied'};
+  $('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([r.improved_prompt],{type:'text/markdown'}));a.download='professional-prompt.md';a.click()};
+  $('again').onclick=()=>{$('prompt').value=r.improved_prompt;$('extra').value='Refine this prompt further: tighten wording, fill gaps, add examples if useful.';$('go').click()};
+}
+
+let history = store.get('history',[]);
+function drawHist(){ $('hist').innerHTML = history.map((h,i)=>`<div data-i="${i}">${esc(h.input)}</div>`).join('') || '<div>No history yet</div>';
+  $('hist').querySelectorAll('[data-i]').forEach(d=>d.onclick=()=>{const h=history[d.dataset.i];$('prompt').value=h.input;render(h.result)}); }
+
+async function run(){
+  const prompt=$('prompt').value.trim(); if(!prompt){$('prompt').focus();return}
+  $('err').style.display='none'; const btn=$('go'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>Analyzing & engineering...';
+  const p=$('provider').value;
+  try{
+    const res = await fetch('/api/engineer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      prompt, provider:p, model:$('model').value, api_key:$('key').value, base_url:$('base').value,
+      mode:$('mode').value, target_model:$('target').value, prompt_language:$('lang').value, extra_context:$('extra').value})});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||res.statusText);
+    render(data);
+    history.unshift({input:prompt,result:data}); history=history.slice(0,25); store.set('history',history); drawHist();
+  }catch(e){ $('err').textContent='⚠ '+e.message+(String(e.message).includes('API key')?'\n→ Open ⚙ Settings and add your key.':''); $('err').style.display='block'; }
+  finally{ btn.disabled=false; btn.innerHTML='✨ Engineer my prompt'; }
+}
+$('go').onclick=run;
+$('prompt').addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) run(); });
+
+fetch('/api/models').then(r=>r.json()).then(d=>{DEFAULTS=d;loadSettings()}).catch(loadSettings);
+drawHist();
+</script>
+</body>
+</html>

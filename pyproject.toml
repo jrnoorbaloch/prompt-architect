@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt-architect"
+version = "1.0.0"
+description = "Professional prompt engineer: turn any basic prompt into a production-ready prompt using Claude, GPT, Gemini, Ollama or any LLM. Includes a Claude Skill and a web UI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["prompt-engineering", "claude", "llm", "openai", "gemini", "ollama", "claude-skill"]
+dependencies = []
+
+[project.scripts]
+prompt-architect = "prompt_architect.cli:main"
+
+[tool.setuptools]
+packages = ["prompt_architect"]
+
+[tool.setuptools.package-data]
+prompt_architect = ["ui/*.html"]
